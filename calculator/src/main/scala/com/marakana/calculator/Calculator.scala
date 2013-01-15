@@ -4,33 +4,37 @@ import collection.mutable
 
 object Calculator {
 
-  def handleOperator(token: String, stack: mutable.Stack[Int]): Boolean = token match {
-    case "+" => {
-      val rhs = stack.pop()
-      val lhs = stack.pop()
-      stack.push(lhs + rhs)
-      true
-    }
-    case "-" => {
-      val rhs = stack.pop()
-      val lhs = stack.pop()
-      stack.push(lhs - rhs)
-      true
-    }
-    case "*" => {
-      val rhs = stack.pop()
-      val lhs = stack.pop()
-      stack.push(lhs * rhs)
-      true
-    }
-    case "/" => {
-      val rhs = stack.pop()
-      val lhs = stack.pop()
-      stack.push(lhs / rhs)
-      true
-    }
-    case _ => false
+  trait Operator {
+    def operate(lhs: Int, rhs: Int): Int
   }
+  class Add extends Operator {
+    override def operate(lhs: Int, rhs: Int): Int = lhs + rhs
+  }
+  class Subtract extends Operator {
+    override def operate(lhs: Int, rhs: Int): Int = lhs - rhs
+  }
+  class Multiply extends Operator {
+    override def operate(lhs: Int, rhs: Int): Int = lhs * rhs
+  }
+  class Divide extends Operator {
+    override def operate(lhs: Int, rhs: Int): Int = lhs / rhs
+  }
+
+  val operators: Map[String, Operator] = Map(
+    "+" -> new Add,
+    "-" -> new Subtract,
+    "*" -> new Multiply,
+    "/" -> new Divide)
+
+  def handleOperator(token: String, stack: mutable.Stack[Int]): Boolean =
+    operators.get(token) match {
+      case Some(op) =>
+        val rhs = stack.pop()
+        val lhs = stack.pop()
+        stack.push(op.operate(lhs, rhs))
+        true
+      case None => false
+    }
 
   def handleNumber(token: String, stack: mutable.Stack[Int]): Boolean = try {
     stack.push(token.toInt)
