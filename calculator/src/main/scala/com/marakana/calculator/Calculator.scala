@@ -4,36 +4,23 @@ import collection.mutable
 
 object Calculator {
 
-  trait Operator {
-    def operate(lhs: Int, rhs: Int): Int
+  object Operator {
+    private val operators: Map[String, (Int, Int) => Int] = Map(
+      "+" -> { _ + _ },
+      "-" -> { _ - _ },
+      "*" -> { _ * _ },
+      "/" -> { _ / _ })
+    def unapply(token: String): Option[(Int, Int) => Int] = operators.get(token)
   }
-  class Add extends Operator {
-    override def operate(lhs: Int, rhs: Int): Int = lhs + rhs
-  }
-  class Subtract extends Operator {
-    override def operate(lhs: Int, rhs: Int): Int = lhs - rhs
-  }
-  class Multiply extends Operator {
-    override def operate(lhs: Int, rhs: Int): Int = lhs * rhs
-  }
-  class Divide extends Operator {
-    override def operate(lhs: Int, rhs: Int): Int = lhs / rhs
-  }
-
-  val operators: Map[String, Operator] = Map(
-    "+" -> new Add,
-    "-" -> new Subtract,
-    "*" -> new Multiply,
-    "/" -> new Divide)
 
   def handleOperator(token: String, stack: mutable.Stack[Int]): Boolean =
-    operators.get(token) match {
-      case Some(op) =>
+    token match {
+      case Operator(op) =>
         val rhs = stack.pop()
         val lhs = stack.pop()
-        stack.push(op.operate(lhs, rhs))
+        stack.push(op(lhs, rhs))
         true
-      case None => false
+      case _ => false
     }
 
   def handleNumber(token: String, stack: mutable.Stack[Int]): Boolean = try {
