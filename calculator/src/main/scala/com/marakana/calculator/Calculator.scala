@@ -1,7 +1,5 @@
 package com.marakana.calculator
 
-import collection.mutable
-
 object Calculator {
 
   object Operator {
@@ -13,33 +11,29 @@ object Calculator {
     def unapply(token: String): Option[(Int, Int) => Int] = operators.get(token)
   }
 
-  def handleOperator(token: String, stack: mutable.Stack[Int]): Boolean =
-    token match {
-      case Operator(op) =>
-        val rhs = stack.pop()
-        val lhs = stack.pop()
-        stack.push(op(lhs, rhs))
-        true
-      case _ => false
+  object Number {
+    def unapply(token: String): Option[Int] = try {
+      Some(token.toInt)
+    } catch {
+      case _: NumberFormatException => None
     }
-
-  def handleNumber(token: String, stack: mutable.Stack[Int]): Boolean = try {
-    stack.push(token.toInt)
-    true
-  } catch {
-    case _: NumberFormatException => false
   }
 
-  def calculate(expression: String): Int = {
-    val tokens = expression.split(" ")
-    val stack = new mutable.Stack[Int]()
-    for (token <- tokens) {
-      if (!handleNumber(token, stack) && !handleOperator(token, stack)) {
-        throw new IllegalArgumentException("invalid expression")
-      }
+  def calculate(tokens: List[String], stack: List[Int]): Int = tokens match {
+    case Number(num) :: tokens => calculate(tokens, num :: stack)
+    case Operator(op) :: tokens => stack match {
+      case rhs :: lhs :: stack => calculate(tokens, op(lhs, rhs) :: stack)
+      case _ => throw new IllegalArgumentException("wrong number of operands")
     }
-    stack.pop()
+    case Nil => stack match {
+      case head :: Nil => head
+      case _ => throw new IllegalArgumentException("wrong number of operands")
+    }
+    case _ => throw new IllegalArgumentException("invalid token")
   }
+
+  def calculate(expression: String): Int =
+    calculate(expression.split(" ").toList, Nil)
 
   def main(args: Array[String]): Unit = args match {
     case Array(expression) => println(calculate(expression))
