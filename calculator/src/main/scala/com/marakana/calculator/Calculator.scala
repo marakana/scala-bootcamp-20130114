@@ -33,8 +33,23 @@ object Calculator {
     stack.head
   }
 
+  def calculateOption(expression: String): Option[Int] = {
+    val tokens = expression split " "
+    val stack = tokens.foldLeft(Option(List.empty[Int])) {
+      (stack: Option[List[Int]], token: String) => token match {
+        case Number(num) => stack map { num :: _ }
+        case Operator(op) => stack flatMap {
+          case rhs :: lhs :: stack => Some(op(lhs, rhs) :: stack)
+          case _ => None
+        }
+        case _ => None
+      }
+    }
+    stack map { _.head }
+  }
+
   def main(args: Array[String]): Unit = args match {
-    case Array(expression) => println(calculate(expression))
+    case Array(expression) => println(calculateOption(expression))
     case _ => println("usage: Calculator <expression>")
   }
 }
