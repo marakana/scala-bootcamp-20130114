@@ -26,4 +26,16 @@ object Monads {
 
   }
 
+  // Future represents the context of delayed (slow?) computations
+  case class Future[A](run: () => A) {
+    def map[B](fn: A => B): Future[B] = Future(() => fn(run()))
+    def flatMap[B](fn: A => Future[B]): Future[B] = Future(() => fn(run()).run())
+  }
+
+  // Reader represents the context of computations that require input
+  case class Reader[E, A](run: E => A) {
+    def map[B](fn: A => B): Reader[E, B] = Reader(env => fn(run(env)))
+    def flatMap[B](fn: A => Reader[E, B]): Reader[E, B] = Reader(env => fn(run(env)).run(env))
+  }
+
 }
