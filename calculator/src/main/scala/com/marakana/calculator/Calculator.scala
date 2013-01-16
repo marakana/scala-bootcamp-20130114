@@ -16,6 +16,7 @@ object Calculator {
   object Number {
     def unapply(token: String): Option[Int] =
       catching(classOf[NumberFormatException]) opt token.toInt
+  }
 
   def calculate(expression: String): Int = {
     val tokens = expression split " "
