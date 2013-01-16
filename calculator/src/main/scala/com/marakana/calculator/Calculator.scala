@@ -19,21 +19,20 @@ object Calculator {
     }
   }
 
-  def calculate(tokens: List[String], stack: List[Int]): Int = tokens match {
-    case Number(num) :: tokens => calculate(tokens, num :: stack)
-    case Operator(op) :: tokens => stack match {
-      case rhs :: lhs :: stack => calculate(tokens, op(lhs, rhs) :: stack)
-      case _ => throw new IllegalArgumentException("wrong number of operands")
+  def calculate(expression: String): Int = {
+    val tokens = expression split " "
+    val stack = tokens.foldLeft(List.empty[Int]) {
+      (stack: List[Int], token: String) => token match {
+        case Number(num) => num :: stack
+        case Operator(op) => stack match {
+          case rhs :: lhs :: stack => op(lhs, rhs) :: stack
+          case _ => throw new IllegalArgumentException("wrong number of operands")
+        }
+        case _ => throw new IllegalArgumentException("invalid token")
+      }
     }
-    case Nil => stack match {
-      case head :: Nil => head
-      case _ => throw new IllegalArgumentException("wrong number of operands")
-    }
-    case _ => throw new IllegalArgumentException("invalid token")
+    stack.head
   }
-
-  def calculate(expression: String): Int =
-    calculate(expression.split(" ").toList, Nil)
 
   def main(args: Array[String]): Unit = args match {
     case Array(expression) => println(calculate(expression))
