@@ -1,5 +1,7 @@
 package com.marakana.calculator
 
+import util.control.Exception.catching
+
 object Calculator {
 
   object Operator {
@@ -12,12 +14,8 @@ object Calculator {
   }
 
   object Number {
-    def unapply(token: String): Option[Int] = try {
-      Some(token.toInt)
-    } catch {
-      case _: NumberFormatException => None
-    }
-  }
+    def unapply(token: String): Option[Int] =
+      catching(classOf[NumberFormatException]) opt token.toInt
 
   def calculate(expression: String): Int = {
     val tokens = expression split " "
