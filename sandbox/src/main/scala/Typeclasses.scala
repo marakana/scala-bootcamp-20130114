@@ -38,9 +38,8 @@ object Typeclasses {
       def plus(lhs: A => A, rhs: A => A): A => A = lhs andThen rhs
     }
 
-    class MonoidOps[A](lhs: A)(implicit monoid: Monoid[A]) {
-      def +(rhs: A): A =
-        monoid.plus(lhs, rhs)
+    implicit class MonoidOps[A : Monoid](lhs: A) {
+      def +(rhs: A): A = implicitly[Monoid[A]].plus(lhs, rhs)
     }
   }
 
