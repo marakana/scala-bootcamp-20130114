@@ -25,7 +25,7 @@ object Cake {
   }
 
   trait Configuration { this: Logger with DataSource =>
-    def lookSomethingUp[A](query: String): A = {
+    def lookSomethingUp[A : Show](query: String): A = {
       val result = request(query)
       log(result)
     }
