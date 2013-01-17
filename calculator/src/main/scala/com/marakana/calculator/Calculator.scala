@@ -18,33 +18,22 @@ object Calculator {
       catching(classOf[NumberFormatException]) opt token.toInt
   }
 
-  def calculate(expression: String): Int = {
-    val tokens = expression split " "
-    val stack = tokens.foldLeft(List.empty[Int]) {
-      (stack: List[Int], token: String) => token match {
-        case Number(num) => num :: stack
-        case Operator(op) => stack match {
-          case rhs :: lhs :: stack => op(lhs, rhs) :: stack
-          case _ => throw new IllegalArgumentException("wrong number of operands")
-        }
-        case _ => throw new IllegalArgumentException("invalid token")
-      }
+  def applyToken(stack: List[Int], token: String): Option[List[Int]] = token match {
+    case Number(num) => Some(num :: stack)
+    case Operator(op) => stack match {
+      case rhs :: lhs :: stack => Some(op(lhs, rhs) :: stack)
+      case _ => None
     }
-    stack.head
+    case _ => None
   }
 
   def calculateOption(expression: String): Option[Int] = {
-    val tokens = expression split " "
-    val stack = tokens.foldLeft(Option(List.empty[Int])) {
-      (stack: Option[List[Int]], token: String) => token match {
-        case Number(num) => stack map { num :: _ }
-        case Operator(op) => stack flatMap {
-          case rhs :: lhs :: stack => Some(op(lhs, rhs) :: stack)
-          case _ => None
-        }
-        case _ => None
-      }
-    }
+    import scalaz.std.option._
+    import scalaz.std.iterable._
+    import scalaz.syntax.foldable._
+
+    val tokens: Iterable[String] = expression split " "
+    val stack = tokens.foldLeftM(List.empty[Int])(applyToken)
     stack map { _.head }
   }
 

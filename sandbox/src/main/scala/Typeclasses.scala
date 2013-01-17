@@ -1,21 +1,25 @@
 object Typeclasses {
 
   trait Functor[F[_]] {
-    def map[A, B](fa: F[A], fn: A => B): F[B]
+    def fmap[A, B](fa: F[A], fn: A => B): F[B]
   }
 
   object Functor {
     implicit val listFunctor = new Functor[List] {
-      def map[A, B](fa: List[A], fn: A => B): List[B] = fa.map(fn)
+      def fmap[A, B](fa: List[A], fn: A => B): List[B] = fa.map(fn)
     }
 
     implicit val optionFunctor = new Functor[Option] {
-      def map[A, B](fa: Option[A], fn: A => B): Option[B] = fa.map(fn)
+      def fmap[A, B](fa: Option[A], fn: A => B): Option[B] = fa.map(fn)
+    }
+
+    implicit class FunctorOps[F[_] : Functor, A](fa: F[A]) {
+      def fmap[B](fn: A => B): F[B] = implicitly[Functor[F]].fmap(fa, fn)
     }
   }
 
   def addOne[F[_] : Functor](f: F[Int]): F[Int] =
-    implicitly[Functor[F]].map(f, {a: Int => a + 1})
+    implicitly[Functor[F]].fmap(f, {a: Int => a + 1})
 
   trait Monoid[A] {
     def zero: A
