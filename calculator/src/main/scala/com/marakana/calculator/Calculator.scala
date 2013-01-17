@@ -27,7 +27,7 @@ object Calculator {
     case _ => None
   }
 
-  def calculateOption(expression: String): Option[Int] = {
+  def calculate(expression: String): Option[Int] = {
     import scalaz.std.option._
     import scalaz.std.iterable._
     import scalaz.syntax.foldable._
@@ -38,7 +38,7 @@ object Calculator {
   }
 
   def main(args: Array[String]): Unit = args match {
-    case Array(expression) => println(calculateOption(expression))
+    case Array(expression) => println(calculate(expression))
     case _ => println("usage: Calculator <expression>")
   }
 }
