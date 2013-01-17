@@ -11,12 +11,18 @@ object Actors {
 
   class Logger extends Runnable {
     private val messages: util.Queue[String] = new util.LinkedList[String]()
-    def log(message: String): Unit = messages.add(message)
+    def log(message: String): Unit = synchronized {
+      messages.add(message)
+      notify()
+    }
+
     def run = while (true) {
-      if (!messages.isEmpty)
-        println(messages.remove())
-      else
-        Thread.`yield`()
+      synchronized {
+        if (!messages.isEmpty)
+          println(messages.remove())
+        else
+          wait()
+      }
     }
   }
 
@@ -26,7 +32,7 @@ object Actors {
     service.execute(logger)
     for (i <- 1 to 100) {
       service.execute(new Runnable {
-        def run = logger.log(fib(Random.nextInt(20)).toString)
+        def run = logger.log(fib(Random.nextInt(40)).toString)
       })
     }
     service.shutdown()
