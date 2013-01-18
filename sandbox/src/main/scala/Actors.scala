@@ -1,6 +1,9 @@
-import java.util
-import util.concurrent.{LinkedBlockingQueue, BlockingQueue, TimeUnit, Executors}
-import scala.util.Random
+import akka.actor.{Props, ActorSystem, ActorRef, Actor}
+import akka.pattern.ask
+import akka.util.Timeout
+import concurrent.Await
+import concurrent.duration._
+import util.Random
 
 object Actors {
 
@@ -9,28 +12,32 @@ object Actors {
     case _ => fib(n-1) + fib(n-2)
   }
 
-  trait Actor extends Runnable {
-    private val messages: BlockingQueue[Any] = new LinkedBlockingQueue()
-    def !(message: Any): Unit = messages.put(message)
-    def run = while (true)
-      receive(messages.take())
+  case object Run
+  class Fib extends Actor {
+    def receive = {
+      case Run => sender ! fib(Random.nextInt(40))
+    }
+  }
 
-    def receive(message: Any): Unit
+  class Main extends Actor {
+    import context.dispatcher
+    implicit val timeout = Timeout(5 seconds)
+    def receive = {
+      case Run =>
+        val product = for {
+          a <- (context.actorOf(Props[Fib]) ? Run).mapTo[BigInt]
+          b <- (context.actorOf(Props[Fib]) ? Run).mapTo[BigInt]
+          c <- (context.actorOf(Props[Fib]) ? Run).mapTo[BigInt]
+        } yield a * b * c
+        println(Await.result(product, timeout.duration))
+    }
   }
 
   def main(args: Array[String]): Unit = {
-    val service = Executors.newFixedThreadPool(10)
-    val logger = new Actor {
-      def receive(message: Any) = println(message.toString)
-    }
-    service.execute(logger)
-    for (i <- 1 to 100) {
-      service.execute(new Runnable {
-        def run = logger ! (fib(Random.nextInt(40)).toString)
-      })
-    }
-    service.shutdown()
-    service.awaitTermination(1, TimeUnit.SECONDS)
+    val system = ActorSystem()
+    val main = system.actorOf(Props[Main])
+    main ! Run
+    system.shutdown()
   }
 
 }
