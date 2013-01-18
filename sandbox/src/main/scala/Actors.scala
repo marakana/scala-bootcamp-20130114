@@ -9,20 +9,24 @@ object Actors {
     case _ => fib(n-1) + fib(n-2)
   }
 
-  class Logger extends Runnable {
-    private val messages: BlockingQueue[String] = new LinkedBlockingQueue()
-    def log(message: String): Unit = messages.put(message)
+  trait Actor extends Runnable {
+    private val messages: BlockingQueue[Any] = new LinkedBlockingQueue()
+    def !(message: Any): Unit = messages.put(message)
     def run = while (true)
-      println(messages.take())
+      receive(messages.take())
+
+    def receive(message: Any): Unit
   }
 
   def main(args: Array[String]): Unit = {
     val service = Executors.newFixedThreadPool(10)
-    val logger = new Logger
+    val logger = new Actor {
+      def receive(message: Any) = println(message.toString)
+    }
     service.execute(logger)
     for (i <- 1 to 100) {
       service.execute(new Runnable {
-        def run = logger.log(fib(Random.nextInt(40)).toString)
+        def run = logger ! (fib(Random.nextInt(40)).toString)
       })
     }
     service.shutdown()
