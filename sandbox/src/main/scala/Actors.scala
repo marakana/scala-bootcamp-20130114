@@ -1,5 +1,5 @@
 import java.util
-import java.util.concurrent.{TimeUnit, Executors}
+import util.concurrent.{LinkedBlockingQueue, BlockingQueue, TimeUnit, Executors}
 import scala.util.Random
 
 object Actors {
@@ -10,20 +10,10 @@ object Actors {
   }
 
   class Logger extends Runnable {
-    private val messages: util.Queue[String] = new util.LinkedList[String]()
-    def log(message: String): Unit = synchronized {
-      messages.add(message)
-      notify()
-    }
-
-    def run = while (true) {
-      synchronized {
-        if (!messages.isEmpty)
-          println(messages.remove())
-        else
-          wait()
-      }
-    }
+    private val messages: BlockingQueue[String] = new LinkedBlockingQueue()
+    def log(message: String): Unit = messages.put(message)
+    def run = while (true)
+      println(messages.take())
   }
 
   def main(args: Array[String]): Unit = {
